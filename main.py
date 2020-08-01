@@ -126,7 +126,7 @@ if __name__ == '__main__':
     physics_options, state, noise = demo_physics_settings('diffusion_and_spring')
 
     # Display settings
-    display_options, plot_options = demo_visual_settings('basic_with_output')
+    display_options, plot_options = demo_visual_settings('basic')
 
     # Start the display app
     app = QtGui.QApplication(sys.argv)
