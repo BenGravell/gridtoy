@@ -1,7 +1,7 @@
-![gridtoy](logo/gridtoy.png)
-
 # gridtoy
  Toy simulator for simple network dynamics with grid topology
+ 
+![gridtoy](logo/gridtoy.png)
 
 ## Dependencies
 - [NumPy](https://numpy.org/)
