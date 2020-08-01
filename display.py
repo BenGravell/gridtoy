@@ -128,6 +128,10 @@ class App(QtGui.QMainWindow):
             else:
                 colormap = None
 
+            # Create the output directories if they do not exist
+            if plot_option.export:
+                create_directory(plot_option.directory)
+
             # Save the graphics object handles
             self.layouts.append(layout)
             self.views.append(view)
@@ -235,3 +239,10 @@ def get_lut(colormap_str):
     colormap._init()
     lut = colormap._lut[:256]*255
     return lut
+
+
+def create_directory(dirname_out):
+    """Create target directory & all intermediate directories if nonexistent"""
+    if not os.path.exists(dirname_out):
+        os.makedirs(dirname_out)
+        print("Directory '%s' created" % dirname_out)

@@ -9,8 +9,8 @@ from display import App, DisplayOptions, PlotOption
 
 def demo_physics_settings(demo_str='diffusion_and_spring'):
     # Simulation settings
-    simulation_options = SimulationOptions(width=100,
-                                           height=100,
+    simulation_options = SimulationOptions(width=200,
+                                           height=200,
                                            dt=0.01,
                                            step_method='euler')
     if demo_str == 'diffusion':
@@ -60,11 +60,11 @@ def demo_physics_settings(demo_str='diffusion_and_spring'):
     elif demo_str == 'diffusion_and_spring':
         # Settings for combined diffusion and spring-mass-damper dynamics
         dynamics_options = DynamicsOptions(mass=1,
-                                           damping_ratio_ground=0.01,
-                                           damping_ratio_neighbor=0.10,
+                                           damping_ratio_ground=0.002,
+                                           damping_ratio_neighbor=0.05,
                                            natural_freq_ground=2,
                                            natural_freq_neighbor=6,
-                                           diffusion_rate=2)
+                                           diffusion_rate=1)
         force_options = ForceOptions(n=simulation_options.n,
                                      pos_amount=10,
                                      vel_amount=20,
@@ -93,8 +93,12 @@ def demo_visual_settings(demo_str='basic'):
     if demo_str == 'basic':
         display_options = DisplayOptions()
         plot_options = [PlotOption()]
+    elif demo_str == 'basic_with_output':
+        directory = os.path.join('frames')
+        display_options = DisplayOptions()
+        plot_options = [PlotOption(export=True, format_str='frame_%07d.png', directory=directory)]
     elif demo_str == 'advanced':
-        output_directory = os.path.join('frames')
+        directory = os.path.join('frames')
         app = QtGui.QApplication(sys.argv)
         screen_rect = app.desktop().screenGeometry()
         screen_width, screen_height = screen_rect.width(), screen_rect.height()
@@ -103,15 +107,15 @@ def demo_visual_settings(demo_str='basic'):
                                          fps_inertia=0.9,
                                          max_fps_report=1000)
         plot_options = [PlotOption(quantity='position_state', show_histogram=True, colormap_str='viridis',
-                                   export=False, format_str='posstate_frame_%07d.png', directory=output_directory),
+                                   export=False, format_str='posstate_frame_%07d.png', directory=directory),
                         PlotOption(quantity='position_noise', show_histogram=True, colormap_str='grey',
-                                   export=False, format_str='posnoise_frame_%07d.png', directory=output_directory),
+                                   export=False, format_str='posnoise_frame_%07d.png', directory=directory),
                         PlotOption(quantity='velocity_state', show_histogram=True, colormap_str='viridis',
-                                   export=False, format_str='velstate_frame_%07d.png', directory=output_directory),
+                                   export=False, format_str='velstate_frame_%07d.png', directory=directory),
                         PlotOption(quantity='velocity_noise', show_histogram=True, colormap_str='grey',
-                                   export=False, format_str='velnoise_frame_%07d.png', directory=output_directory),
+                                   export=False, format_str='velnoise_frame_%07d.png', directory=directory),
                         PlotOption(quantity='force', show_histogram=True, colormap_str='inferno',
-                                   export=False, format_str='force_frame_%07d.png', directory=output_directory)]
+                                   export=False, format_str='force_frame_%07d.png', directory=directory)]
     else:
         raise Exception('Invalid demo visual setting string')
     return display_options, plot_options
@@ -122,11 +126,7 @@ if __name__ == '__main__':
     physics_options, state, noise = demo_physics_settings('diffusion_and_spring')
 
     # Display settings
-    display_options, plot_options = demo_visual_settings('basic')
-    plot_options[0].export = True
-    plot_options[0].directory = os.path.join('frames')
-    plot_options[0].format_str = 'frame_%07d.png'
-    plot_options[0].scale = 4
+    display_options, plot_options = demo_visual_settings('basic_with_output')
 
     # Start the display app
     app = QtGui.QApplication(sys.argv)
