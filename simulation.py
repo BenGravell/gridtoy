@@ -192,11 +192,9 @@ def generate_force_params(t, simulation_options, force_options):
 
 
 def dxdt(state, t, simulation_options, dynamics_options, force_options, return_force=False):
-
     # Compute the external force, which is applied to both position and velocity
     a, sx, sy = generate_force_params(t, simulation_options, force_options)
     force_external = a*force_options.kernel
-
 
     # Position
     # Compute components
@@ -246,6 +244,8 @@ def step(state, t, simulation_options, dynamics_options, force_options, return_f
         k3, _ = partial_dxdt(state + (dt/2)*k2, t)
         k4, _ = partial_dxdt(state + dt*k3, t)
         state_new = state + (dt/6)*(k1 + 2*k2 + 2*k3 + k4)
+    else:
+        raise ValueError('Invalid step_method chosen')
     return state_new, force
 
 

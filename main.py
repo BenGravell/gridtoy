@@ -64,10 +64,10 @@ def demo_physics_settings(demo_str='diffusion_and_spring'):
                                            damping_ratio_neighbor=0.05,
                                            natural_freq_ground=2,
                                            natural_freq_neighbor=6,
-                                           diffusion_rate=1)
+                                           diffusion_rate=0.1)
         force_options = ForceOptions(n=simulation_options.n,
-                                     pos_amount=10,
-                                     vel_amount=20,
+                                     pos_amount=5,
+                                     vel_amount=10,
                                      randomness=0.5,
                                      kernel_radius=0.2,
                                      orbit_radius=0.5,
@@ -75,8 +75,8 @@ def demo_physics_settings(demo_str='diffusion_and_spring'):
                                      pulse_freq=1/12,
                                      dwell_squash=10,
                                      dwell_narrow=0.90)
-        noise_options = NoiseOptions(pos_amount=0.01,
-                                     vel_amount=0.03,
+        noise_options = NoiseOptions(pos_amount=0.005,
+                                     vel_amount=0.02,
                                      pos_inertia=0.9,
                                      vel_inertia=0.9)
     else:

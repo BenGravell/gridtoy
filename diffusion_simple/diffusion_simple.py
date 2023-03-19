@@ -19,8 +19,12 @@ dt = 0.1
 state = npr.rand(n, n)
 noise = np.zeros([n, n])
 
-# Define the diffusion rate - ensure rate*dt < 0.25 for numerical stability using Euler integration
+# Define the diffusion rate
 rate = 2.0
+
+if rate*dt > 0.25:
+    raise ValueError("Step size too large, reduce to less than %f to ensure numerical stability" % (0.25/rate))
+
 
 # Define the force and noise amount
 force_amount = 0.005

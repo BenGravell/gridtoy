@@ -29,6 +29,7 @@ class Diffuse(Example):
         width, height = self.window_size
         canvas = np.array([0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]).astype('f4')
         pixels = npr.rand(width, height).astype('f4')
+        noise = npr.rand(width, height).astype('f4')
         grid = np.dstack(np.mgrid[0:height, 0:width][::-1]).astype('i4')
 
         self.prog = self.ctx.program(
@@ -66,11 +67,14 @@ class Diffuse(Example):
                 uniform int Height;
 
                 in ivec2 in_text;
+                in float in_noise_prev;
+                
                 out float out_vert;
+                out float out_noise_prev;
 
-                #define RATE 0.2
-                #define NOISE_AMOUNT 0.1
-                #define NOISE_INERTIA 0.95
+                #define RATE 0.002
+                #define NOISE_AMOUNT 0.3
+                #define NOISE_INERTIA 0.5  // unused for now
                 
                 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm (pseudorandom number generator)
                 uint hash1(uint x) {
@@ -105,24 +109,53 @@ class Diffuse(Example):
                 float random2( vec2  v ) { return floatConstruct(hash2(floatBitsToUint(v))); }
                 float random3( vec3  v ) { return floatConstruct(hash3(floatBitsToUint(v))); }
                 float random4( vec4  v ) { return floatConstruct(hash4(floatBitsToUint(v))); }
-
+                
+                
+                float center_and_scale(float x, float center, float scale)
+                {
+                    return scale*(x - center);
+                }
+                
+                float mix(float a, float b, float x)
+                {
+                    return x*a + (1.0 - x)*b;
+                }
+                
                 // Get the cell value at x, y using wrap-around if x, y out of bounds
                 float cell(int x, int y) {
                     return texelFetch(Texture, ivec2((x + Width) % Width, (y + Height) % Height), 0).r;
-                }
+                }                               
+                
 
-                void main() {
-                    float center = cell(in_text.x, in_text.y);
-                    float noise;
-                    float neighbors = 0;
-                    neighbors += cell(in_text.x - 1, in_text.y);
-                    neighbors += cell(in_text.x + 1, in_text.y);
-                    neighbors += cell(in_text.x, in_text.y - 1);
-                    neighbors += cell(in_text.x, in_text.y + 1);
+                void main() {                
+                    int d = 4;
+                    float val_center = cell(in_text.x, in_text.y);
+                    float val_neighbors = 0;
+                    float weight_neighbors = 0;
+                    float r2;
+                    float weight;
+                    float weight_inv;
+                    for (int i = -d; i <= d; i++) {
+                        for (int j = -d; j <= d; j++) {     
+                            if (i==0 && j==0)
+                            {
+                                continue;
+                            }
+                            r2 = i*i + j*j;
+                            weight = sqrt(r2);         
+                            weight_inv = 1.0/weight;       
+                            val_neighbors += weight_inv*cell(in_text.x + i, in_text.y + j);
+                            weight_neighbors += weight_inv;
+                        }
+                    }
                     
-                    vec3 noise_inputs = vec3(in_text.x, in_text.y, int(center*1000000));
-                    noise = NOISE_AMOUNT*(random3(noise_inputs)-0.5);
-                    out_vert = ((1.0-4.0*RATE)*center) + (RATE*neighbors) + (noise);
+                    vec3 noise_inputs = vec3(in_text.x, in_text.y, int(val_center*1000000));
+                    float noise_raw = random3(noise_inputs);
+                    float noise_centered_scaled = center_and_scale(noise_raw, 0.5, NOISE_AMOUNT);
+                    // float noise = mix(in_noise_prev, noise_centered_scaled, NOISE_INERTIA);
+                    float noise = noise_centered_scaled;
+                    out_vert = ((1.0-weight_neighbors*RATE)*val_center) + (RATE*val_neighbors) + (noise);
+                    out_noise_prev = noise;
                 }
             ''',
             varyings=['out_vert']
@@ -142,6 +175,8 @@ class Diffuse(Example):
         self.text = self.ctx.buffer(grid)
         self.tao = self.ctx.simple_vertex_array(self.transform, self.text, 'in_text')
         self.pbo = self.ctx.buffer(reserve=pixels.nbytes)
+        self.nbo = self.ctx.buffer(reserve=noise.nbytes)
+
 
     def render(self, time, frame_time):
         self.ctx.clear(1.0, 1.0, 1.0)
